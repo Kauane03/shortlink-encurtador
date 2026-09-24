@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ShortLink — encurtador de URLs distribuído.">
+  <title>ShortLink — Encurtador de URLs</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23c7ff42'/%3E%3Cpath d='M27 23h-4a9 9 0 000 18h8a9 9 0 008-5M37 41h4a9 9 0 000-18h-8a9 9 0 00-8 5' fill='none' stroke='%2306111f' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    :root{--navy:#06111f;--panel:#0a1929;--lime:#c7ff42;--text:#f8fafc;--muted:#94a3b8;--line:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--navy);color:var(--text);font-family:Inter,Aptos,"Segoe UI",Arial,sans-serif}button,input{font:inherit}a{color:inherit;text-decoration:none}.shell{width:min(1180px,calc(100% - 40px));margin:auto}.header{height:80px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:850;letter-spacing:-.03em}.logo{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:var(--lime);color:var(--navy);box-shadow:0 0 30px rgba(199,255,66,.18)}.logo svg{width:21px}.nav{display:flex;gap:30px;font-size:14px;color:#cbd5e1}.nav a:hover{color:#fff}.pill{border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:10px 16px;font-size:14px;font-weight:700}.pill:hover{border-color:var(--lime);color:var(--lime)}
+    .hero{position:relative;min-height:720px;display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding:84px 0}.hero:before{content:"";position:absolute;left:-26%;top:8%;width:720px;height:720px;border-radius:50%;background:radial-gradient(circle,rgba(35,104,140,.32),transparent 68%);pointer-events:none}.hero-copy,.architecture{position:relative;z-index:1}.tag{display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(199,255,66,.25);background:rgba(199,255,66,.1);color:#d8ff7c;border-radius:999px;padding:7px 12px;font-size:14px;font-weight:750}.hero h1{margin:28px 0 0;font-size:clamp(56px,7.6vw,114px);line-height:.86;letter-spacing:-.075em}.hero h1 span{display:block;color:var(--lime);margin-top:10px}.lead{max-width:610px;margin:30px 0 0;color:#cbd5e1;font-size:18px;line-height:1.75}
+    .shortener{margin-top:38px;max-width:680px;padding:12px;border:1px solid var(--line);border-radius:28px;background:rgba(255,255,255,.075);box-shadow:0 28px 90px rgba(0,0,0,.3);backdrop-filter:blur(18px)}.form-row{display:flex;gap:12px}.url-input{min-width:0;flex:1;height:56px;padding:0 20px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:#0c1b2c;color:#fff;outline:none}.url-input:focus{border-color:rgba(199,255,66,.65);box-shadow:0 0 0 3px rgba(199,255,66,.12)}.primary{height:56px;padding:0 26px;border:0;border-radius:16px;background:var(--lime);color:var(--navy);font-weight:850;cursor:pointer}.primary:hover{background:#d6ff74}.result{margin-top:12px;padding:12px 16px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(6,17,31,.75);display:flex;align-items:center;justify-content:space-between;gap:16px}.label{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:#64748b;font-weight:750}.short-url{margin:3px 0 0;color:var(--lime);font-weight:800}.copy{height:40px;padding:0 16px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer}.status{margin:8px 8px 0;color:var(--muted);font-size:14px}
+    .architecture{padding:28px;border:1px solid var(--line);border-radius:34px;background-color:rgba(10,25,41,.92);background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:24px 24px;box-shadow:0 30px 100px rgba(0,0,0,.35)}.arch-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}.eyebrow{margin:0;color:var(--lime);font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.16em}.architecture h2{margin:6px 0 0;font-size:21px}.online{display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:rgba(52,211,153,.1);color:#6ee7b7;font-size:12px;font-weight:750}.online:before{content:"";width:8px;height:8px;border-radius:50%;background:#34d399}.node{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.045)}.node.accent{border-color:rgba(199,255,66,.3);background:rgba(199,255,66,.1)}.icon{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:12px;background:rgba(255,255,255,.08);font-weight:900}.accent .icon{background:var(--lime);color:var(--navy)}.node strong{font-size:14px}.node small{display:block;margin-top:3px;color:#64748b}.connector{height:28px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:10px;text-transform:uppercase;letter-spacing:.12em}.connector:before{content:"";width:1px;height:100%;background:linear-gradient(var(--lime),rgba(255,255,255,.15))}.connector span{position:absolute;margin-left:min(390px,70%)}.nodes{display:grid;grid-template-columns:1fr 1fr;gap:12px}.availability{position:absolute;right:-18px;bottom:-28px;padding:16px 20px;border-radius:17px;background:var(--lime);color:var(--navy);box-shadow:0 18px 35px rgba(0,0,0,.3)}.availability small{font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.12em}.availability b{display:block;margin-top:5px;font-size:30px;letter-spacing:-.06em}
+    .metrics{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.035)}.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr)}.metric{padding:30px 40px;border-left:1px solid var(--line)}.metric:first-child{border-left:0}.metric b{font-size:25px;color:var(--lime);letter-spacing:-.04em}.metric span{display:block;margin-top:5px;color:var(--muted);font-size:14px}
+    .how{padding:116px 0;display:grid;grid-template-columns:.75fr 1.25fr;gap:48px}.how h2{margin:16px 0 0;font-size:48px;line-height:1.02;letter-spacing:-.055em}.how-intro{max-width:440px;color:var(--muted);line-height:1.75}.steps{display:grid;gap:16px}.step{display:grid;grid-template-columns:64px 1fr;align-items:center;padding:23px;border:1px solid var(--line);border-radius:24px;background:rgba(255,255,255,.035)}.step:hover{border-color:rgba(199,255,66,.3)}.number{font-size:25px;font-weight:900;color:var(--lime)}.step h3{margin:0;font-size:18px}.step p{margin:6px 0 0;color:var(--muted);line-height:1.55}.footer{border-top:1px solid var(--line)}.footer-inner{min-height:88px;display:flex;align-items:center;justify-content:space-between;gap:24px;color:var(--muted);font-size:14px}.footer .brand{color:#fff;font-size:15px}
+    @media(max-width:900px){.nav{display:none}.hero{grid-template-columns:1fr;padding-top:64px}.architecture{max-width:600px}.how{grid-template-columns:1fr}.how-intro{max-width:620px}}
+    @media(max-width:620px){.shell{width:calc(100% - 28px)}.header{height:72px}.pill{padding:9px 12px}.hero{padding:54px 0 72px;gap:48px}.hero h1{font-size:58px}.lead{font-size:16px}.form-row{flex-direction:column}.primary{width:100%}.result{align-items:flex-start;flex-direction:column}.copy{width:100%}.architecture{padding:20px}.arch-head{align-items:flex-start}.nodes{grid-template-columns:1fr}.availability{display:none}.metrics-grid{grid-template-columns:1fr}.metric{border-left:0;border-top:1px solid var(--line);padding:24px 0}.metric:first-child{border-top:0}.how{padding:80px 0}.how h2{font-size:38px}.step{grid-template-columns:1fr;gap:10px}.footer-inner{padding:28px 0;flex-direction:column;align-items:flex-start}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <header class="header shell">
+    <a class="brand" href="#inicio"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/></svg></span>ShortLink</a>
+    <nav class="nav" aria-label="Navegação principal"><a href="#como-funciona">Como funciona</a><a href="#arquitetura">Arquitetura</a><a href="https://github.com/Kauane03/shortlink-encurtador">GitHub</a></nav>
+    <a class="pill" href="#encurtar">Encurtar URL</a>
+  </header>
+
+  <main>
+    <section class="hero shell" id="inicio">
+      <div class="hero-copy">
+        <span class="tag">✣ Encurtador distribuído, rápido e confiável</span>
+        <h1>Links menores.<span>Alcance maior.</span></h1>
+        <p class="lead">Transforme URLs longas em links simples de compartilhar. Uma interface direta, preparada para uma arquitetura que cresce com o acesso.</p>
+        <form class="shortener" id="encurtar">
+          <div class="form-row"><label for="url" hidden>Cole a URL que deseja encurtar</label><input class="url-input" id="url" type="url" placeholder="https://exemplo.com/produtos/colecao/primavera"><button class="primary" type="submit">Encurtar agora →</button></div>
+          <div class="result"><div><div class="label">Resultado</div><p class="short-url" id="short-url">short.link/7xQ2kB</p></div><button class="copy" type="button" id="copy">Copiar link</button></div>
+          <p class="status" id="status" aria-live="polite">Prévia ilustrativa — conecte a URL da API no arquivo para ativar o serviço.</p>
+        </form>
+      </div>
+
+      <div class="architecture" id="arquitetura">
+        <div class="arch-head"><div><p class="eyebrow">Infraestrutura</p><h2>Fluxo distribuído</h2></div><span class="online">Online</span></div>
+        <div class="node accent"><span class="icon">↗</span><div><strong>Cliente Web</strong><small>envia a URL</small></div></div>
+        <div class="connector"><span>HTTPS</span></div>
+        <div class="node"><span class="icon">⌘</span><div><strong>Load Balancer</strong><small>distribui as requisições</small></div></div>
+        <div class="connector"><span>round robin</span></div>
+        <div class="nodes"><div class="node"><span class="icon">01</span><div><strong>API 01</strong><small>processamento</small></div></div><div class="node"><span class="icon">02</span><div><strong>API 02</strong><small>processamento</small></div></div></div>
+        <div class="connector"><span>cache + dados</span></div>
+        <div class="nodes"><div class="node"><span class="icon">⚡</span><div><strong>Redis</strong><small>cache rápido</small></div></div><div class="node"><span class="icon">▣</span><div><strong>Banco</strong><small>persistência</small></div></div></div>
+        <div class="availability"><small>Disponibilidade</small><b>99,9%</b></div>
+      </div>
+    </section>
+
+    <section class="metrics"><div class="metrics-grid shell"><div class="metric"><b>2 nós</b><span>API escalável</span></div><div class="metric"><b>Redis</b><span>respostas em cache</span></div><div class="metric"><b>Base62</b><span>códigos compactos</span></div></div></section>
+    <section class="how shell" id="como-funciona"><div><p class="eyebrow">Como funciona</p><h2>Do link longo ao clique em três etapas.</h2><p class="how-intro">A experiência permanece simples para quem usa, enquanto a infraestrutura cuida da distribuição, do cache e da persistência.</p></div><div class="steps"><article class="step"><span class="number">01</span><div><h3>Cole sua URL</h3><p>Informe o endereço completo que será transformado.</p></div></article><article class="step"><span class="number">02</span><div><h3>Receba o código curto</h3><p>A API valida o endereço e gera um identificador Base62 único.</p></div></article><article class="step"><span class="number">03</span><div><h3>Compartilhe e redirecione</h3><p>O acesso ao link curto consulta o cache e direciona para o destino original.</p></div></article></div></section>
+  </main>
+  <footer class="footer"><div class="footer-inner shell"><span class="brand">ShortLink</span><span>Projeto acadêmico de Sistemas Distribuídos.</span><a href="https://github.com/Kauane03/shortlink-encurtador">Ver repositório ↗</a></div></footer>
+
+  <script>
+    const API_ENDPOINT = ''; // Exemplo: 'https://api.seudominio.com/shorten'
+    const form = document.querySelector('#encurtar');
+    const input = document.querySelector('#url');
+    const shortUrl = document.querySelector('#short-url');
+    const status = document.querySelector('#status');
+    const copy = document.querySelector('#copy');
+
+    function demoSlug(url) {
+      let hash = 0;
+      for (const character of url) hash = ((hash * 31) + character.charCodeAt(0)) >>> 0;
+      return hash.toString(36).slice(0, 6).padEnd(6, 'x');
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const url = input.value.trim();
+      if (!/^https?:\/\//i.test(url)) {
+        status.textContent = 'Informe uma URL completa começando com http:// ou https://';
+        return;
+      }
+      try {
+        if (API_ENDPOINT) {
+          status.textContent = 'Encurtando...';
+          const response = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+          if (!response.ok) throw new Error('A API não respondeu corretamente.');
+          const data = await response.json();
+          shortUrl.textContent = data.shortUrl || data.short_url || data.url;
+          status.textContent = 'Link criado com sucesso.';
+        } else {
+          shortUrl.textContent = 'short.link/' + demoSlug(url);
+          status.textContent = 'Link de demonstração gerado. Defina API_ENDPOINT para conectar a API.';
+        }
+      } catch (error) {
+        status.textContent = error.message || 'Não foi possível encurtar o link.';
+      }
+    });
+
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText('https://' + shortUrl.textContent);
+      copy.textContent = 'Copiado ✓';
+      setTimeout(() => { copy.textContent = 'Copiar link'; }, 1800);
+    });
+  </script>
+</body>
+</html>
