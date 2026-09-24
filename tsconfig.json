@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "rootDir": ".",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["server.ts", "config/**/*.ts", "controllers/**/*.ts", "utils/**/*.ts", "db/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
