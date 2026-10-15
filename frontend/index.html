@@ -47,10 +47,9 @@
   <footer class="footer"><div class="footer-inner shell"><span class="brand">ShortLink</span><span>Projeto acadêmico de Sistemas Distribuídos.</span><a href="https://github.com/Kauane03/shortlink-encurtador">Ver repositório ↗</a></div></footer>
 
   <script>
-    // Localmente, a API usa a porta 3000; na Vercel, frontend e API compartilham o domínio.
-    const API_ENDPOINT = window.location.hostname === 'localhost' && window.location.port !== '3000'
-      ? 'http://localhost:3000/links'
-      : '/api/links';
+    // A API local expõe o endpoint POST /links na porta padrão 3000.
+    // Em produção, troque pela URL pública do backend.
+    const API_ENDPOINT = 'http://localhost:3000/links';
     const form = document.querySelector('#encurtar');
     const input = document.querySelector('#url');
     const shortUrl = document.querySelector('#short-url');
