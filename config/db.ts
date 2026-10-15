@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../db/schema";
+import { env } from "./env";
 
 /**
  * O pool reutiliza conexões com o PostgreSQL, evitando abrir uma conexão nova
@@ -9,13 +10,21 @@ import * as schema from "../db/schema";
  * compartilhado e consistente entre todas as instâncias.
  */
 export const pool = new Pool({
-	connectionString: process.env.DATABASE_URL,
+	connectionString: env.DATABASE_URL,
 	host: process.env.PGHOST,
 	port: process.env.PGPORT ? Number(process.env.PGPORT) : undefined,
 	database: process.env.PGDATABASE,
 	user: process.env.PGUSER,
 	password: process.env.PGPASSWORD,
-	max: process.env.PG_POOL_MAX ? Number(process.env.PG_POOL_MAX) : 10,
+	max: env.PG_POOL_MAX,
+});
+
+/**
+ * Uma conexão ociosa pode cair (reinício do banco, rede). Sem este listener,
+ * o erro emitido pelo pool derrubaria o processo inteiro.
+ */
+pool.on("error", (error) => {
+	console.error("Erro em conexão ociosa do PostgreSQL:", error);
 });
 
 /** Instância do Drizzle usando o pool compartilhado do PostgreSQL. */

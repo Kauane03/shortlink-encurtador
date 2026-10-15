@@ -10,6 +10,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["server.ts", "config/**/*.ts", "controllers/**/*.ts", "utils/**/*.ts", "db/**/*.ts"],
+  "include": ["server.ts", "config/**/*.ts", "controllers/**/*.ts", "utils/**/*.ts", "db/**/*.ts", "middleware/**/*.ts", "validation/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
