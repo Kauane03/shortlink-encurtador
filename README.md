@@ -1,21 +1,99 @@
 # ShortLink
 
-Projeto acadêmico de um encurtador de URLs com arquitetura distribuída.
+Projeto acadêmico de um encurtador de URLs com frontend web e API distribuída. O backend usa Node.js, Express, TypeScript, PostgreSQL, Drizzle ORM e Redis.
 
-## Estrutura inicial
+## Status atual
 
-- `frontend/`: interface web responsiva do encurtador.
-- API e serviços distribuídos: em desenvolvimento pela equipe.
+- Frontend responsivo em `frontend/index.html`.
+- API `POST /links` para criar links curtos.
+- API `GET /:code` para redirecionar com HTTP 302.
+- Geração de códigos Base62.
+- PostgreSQL para persistência.
+- Drizzle para schema e migrations.
+- Redis para cache distribuído com TTL.
+- Tratamento de colisão PostgreSQL `23505` com novas tentativas.
+- Frontend conectado ao backend local em `http://localhost:3000/links`.
+- TypeScript compilando com sucesso por meio de `npm run build`.
 
-## Executar o frontend
+## Tecnologias utilizadas
 
-Abra `frontend/index.html` diretamente no navegador ou sirva a pasta com um servidor estático.
+### Backend
 
-O template funciona em modo demonstrativo. Para conectar a API, edite a constante `API_ENDPOINT` no final de `frontend/index.html`.
+- **Node.js**: executa a API no computador e também os comandos do projeto.
+- **TypeScript**: adiciona tipagem ao código e é compilado para JavaScript em `dist/`.
+- **Express**: cria o servidor HTTP e as rotas `POST /links` e `GET /:code`.
+- **pg**: driver usado para conectar a API ao PostgreSQL.
+- **Drizzle ORM e Drizzle Kit**: definem a tabela em `db/schema.ts` e geram/aplicam migrations.
+- **Redis**: cache distribuído para acelerar os redirecionamentos.
+- **dotenv**: carrega as configurações do arquivo `.env`.
+- **cors**: permite requisições do frontend para a API durante o desenvolvimento.
+- **crypto do Node.js**: gera bytes aleatórios usados na criação dos códigos Base62.
 
-## Integração esperada
+### Frontend
 
-O formulário envia uma requisição `POST` em JSON no formato:
+- **HTML, CSS e JavaScript**: interface web responsiva em um único arquivo, `frontend/index.html`.
+- **Fetch API**: envia a URL para o endpoint `POST /links`.
+- **`npx serve`**: servidor HTTP simples usado para abrir o frontend localmente.
+
+## Alternativas utilizadas para conseguir rodar
+
+O projeto foi executado localmente apenas com Node.js, enquanto os serviços pesados ficaram hospedados:
+
+| Necessidade | Solução utilizada | Alternativa possível |
+|---|---|---|
+| PostgreSQL | **Neon** usando `DATABASE_URL` | PostgreSQL instalado localmente, Supabase ou Docker |
+| Redis | **Upstash** usando `rediss://` com TLS | Redis local, Redis Cloud ou Docker |
+| Servir o frontend | `npx serve frontend` | Extensão Live Server ou abrir o HTML diretamente |
+| Criar a tabela | Drizzle Kit com `npm run db:migrate` | Executar o SQL manualmente no PostgreSQL |
+| Ambiente isolado | Não foi usado Docker | Docker Compose com API, PostgreSQL e Redis |
+
+Essa escolha reduz o consumo de memória do computador. O Node.js e o frontend continuam locais, mas o PostgreSQL e o Redis são acessados pela internet.
+
+### Por que usar `rediss://` no Redis
+
+O Upstash exige conexão TLS. Por isso, a variável precisa usar `rediss://` e incluir a porta na URL completa:
+
+```env
+REDIS_URL=rediss://default:senha@servidor.upstash.io:6379
+```
+
+Usar `redis://` em um servidor que exige TLS causa erros como `SocketClosedUnexpectedlyError`. A conexão correta foi confirmada com um teste `PING`, que retornou `PONG`.
+
+### Por que não usar Docker
+
+Docker seria útil para reproduzir toda a infraestrutura local, mas consome mais memória e CPU. Como o computador possui poucos recursos, Neon e Upstash foram usados como alternativas mais leves. O Docker continua sendo uma opção para desenvolvimento offline ou para padronizar o ambiente de uma equipe.
+
+## Estrutura
+
+```text
+shortlink-encurtador/
+├── frontend/
+│   └── index.html               # Interface web e integração com a API
+├── config/
+│   └── db.ts                    # Pool PostgreSQL e instância Drizzle
+├── db/
+│   └── schema.ts                # Tabela links definida no Drizzle
+├── controllers/
+│   └── linkController.ts        # Criação e redirecionamento de links
+├── utils/
+│   └── base62.ts                # Geração do código curto
+├── drizzle/
+│   └── 0000_wakeful_darwin.sql # Migration gerada pelo Drizzle
+├── server.ts                    # Entrada da API Express
+├── drizzle.config.ts            # Configuração do Drizzle Kit
+├── tsconfig.json                # Configuração TypeScript
+├── package.json                 # Dependências e scripts
+└── .env                         # Configuração local, não publicar
+```
+
+## Como a integração funciona
+
+O frontend envia:
+
+```http
+POST http://localhost:3000/links
+Content-Type: application/json
+```
 
 ```json
 {
@@ -23,101 +101,16 @@ O formulário envia uma requisição `POST` em JSON no formato:
 }
 ```
 
-A resposta pode utilizar `shortUrl`, `short_url` ou `url` para informar o link encurtado.
+A API responde com:
 
-# Shortlink Encurtador
-
-API de encurtamento de URLs desenvolvida em Node.js, Express e TypeScript. O projeto usa PostgreSQL como armazenamento persistente e Redis como cache distribuído.
-
-## Autoria
-
-O repositório está associado ao usuário **Kauane03**, conforme os campos `repository` e `homepage` do `package.json`. A estrutura e a implementação atual foram organizadas para demonstrar conceitos de APIs stateless, concorrência, persistência e cache em Sistemas Distribuídos.
-
-## O que já foi feito
-
-- Migração da estrutura de JavaScript para TypeScript.
-- Configuração do compilador em `tsconfig.json`.
-- Configuração dos scripts `build` e `start`.
-- API HTTP com Express.
-- Endpoint `POST /links` para criar links curtos.
-- Geração de códigos Base62 aleatórios.
-- Persistência dos links no PostgreSQL.
-- Tratamento de colisões de código usando o erro PostgreSQL `23505`.
-- Retry automático com `while` até inserir um código disponível.
-- Cache distribuído com Redis.
-- Endpoint `GET /:code` com fluxo cache-aside:
-  1. procura no Redis;
-  2. em caso de cache miss, consulta o PostgreSQL;
-  3. grava o resultado no Redis com TTL;
-  4. redireciona com HTTP 302.
-- Uso de variáveis de ambiente por meio do pacote `dotenv`.
-- Comentários em português explicando escalabilidade, concorrência, stateless e cache distribuído.
-
-## Estrutura de pastas
-
-```text
-shortlink-encurtador/
-├── config/
-│   └── db.ts
-├── db/
-│   └── schema.ts
-├── controllers/
-│   └── linkController.ts
-├── utils/
-│   └── base62.ts
-├── server.ts
-├── drizzle.config.ts
-├── drizzle/
-│   └── 0000_wakeful_darwin.sql
-├── tsconfig.json
-├── package.json
-└── package-lock.json
+```json
+{
+  "code": "aZ91kLm",
+  "shortUrl": "http://localhost:3000/aZ91kLm"
+}
 ```
 
-### `server.ts`
-
-É o ponto de entrada da aplicação. Ele:
-
-- carrega as variáveis do `.env`;
-- cria o servidor Express;
-- configura CORS e leitura de JSON;
-- cria e conecta o cliente Redis;
-- registra as rotas;
-- inicia a API na porta configurada.
-
-O servidor não guarda sessões nem links em memória. Por isso, várias instâncias podem rodar atrás de um balanceador de carga sem depender da afinidade de sessão.
-
-### `config/db.ts`
-
-Cria um `Pool` de conexões do PostgreSQL e uma instância do Drizzle sobre esse pool. O pool evita abrir uma nova conexão para cada requisição e permite reutilizar conexões com o banco.
-
-O PostgreSQL é a fonte persistente dos dados. O Redis pode perder dados do cache sem perder os links, porque o fallback consulta o banco.
-
-### `db/schema.ts`
-
-Define a tabela `links` usando o schema do Drizzle. A definição corresponde a:
-
-- `id`: `BIGSERIAL` e chave primária;
-- `shortCode`: `VARCHAR(32)`, obrigatório e único;
-- `originalUrl`: `TEXT`, obrigatório;
-- `createdAt`: `TIMESTAMPTZ`, obrigatório e preenchido com `NOW()`.
-
-### `drizzle.config.ts` e `drizzle/`
-
-Configuram e armazenam as migrations do Drizzle. O arquivo SQL em `drizzle/` é gerado a partir de `db/schema.ts`; ele cria a tabela no PostgreSQL sem precisar copiar SQL manualmente.
-
-### `controllers/linkController.ts`
-
-Contém a lógica dos endpoints:
-
-- `createShortLink`: valida a URL, gera o código Base62, insere no banco, trata colisões e popula o Redis.
-- `redirectShortLink`: consulta o Redis primeiro, consulta o banco em caso de cache miss, repopula o cache e responde com redirecionamento `302`.
-
-A restrição `UNIQUE` no PostgreSQL é essencial para que concorrências entre requisições ou instâncias sejam resolvidas corretamente.
-
-### `utils/base62.ts`
-
-Gera códigos curtos usando os caracteres `0-9`, `a-z` e `A-Z`. A função usa bytes aleatórios para reduzir a probabilidade de colisões, mas a garantia final de unicidade é responsabilidade do banco de dados.
+O frontend mostra essa URL e o botão de cópia copia o endereço completo. Ao abrir a URL curta, o backend procura primeiro no Redis; se não encontrar, consulta o PostgreSQL, preenche o cache e redireciona para a URL original.
 
 ## Pré-requisitos
 
@@ -126,23 +119,37 @@ Gera códigos curtos usando os caracteres `0-9`, `a-z` e `A-Z`. A função usa b
 - PostgreSQL local ou hospedado.
 - Redis local ou hospedado.
 
-Docker não é obrigatório. Em um computador mais fraco, PostgreSQL e Redis podem ser usados em serviços externos, como Neon/Supabase para PostgreSQL e Upstash para Redis.
+Docker não é obrigatório. Para um computador mais fraco, PostgreSQL e Redis podem ser usados na nuvem, como Neon/Supabase e Upstash.
 
-## Configuração do banco
+## Configuração
 
-O schema está definido em `db/schema.ts`. Para gerar uma migration depois de alterar o schema:
+Crie ou atualize o arquivo `.env` na raiz:
 
-```bash
+```env
+PORT=3000
+DATABASE_URL=postgresql://usuario:senha@host:5432/encurtador
+REDIS_URL=rediss://default:senha@servidor.upstash.io:6379
+CACHE_TTL_SECONDS=3600
+PG_POOL_MAX=10
+```
+
+Use `rediss://` quando o Redis exigir TLS, como no Upstash. Nunca publique o `.env`, pois ele contém credenciais.
+
+## Banco de dados com Drizzle
+
+O schema está em `db/schema.ts`. Para gerar uma migration após alterar esse schema:
+
+```powershell
 npm run db:generate
 ```
 
-Para aplicar a migration no banco configurado em `DATABASE_URL`:
+Para aplicar as migrations no PostgreSQL configurado em `DATABASE_URL`:
 
-```bash
+```powershell
 npm run db:migrate
 ```
 
-A migration atual cria a tabela equivalente ao SQL abaixo:
+A tabela criada é equivalente a:
 
 ```sql
 CREATE TABLE "links" (
@@ -154,161 +161,114 @@ CREATE TABLE "links" (
 );
 ```
 
-A coluna `short_code` precisa ser `UNIQUE`. Sem essa restrição, duas requisições concorrentes poderiam gravar o mesmo código e o tratamento do erro `23505` não seria acionado.
+A restrição `UNIQUE` é obrigatória para resolver colisões concorrentes com segurança.
 
-## Variáveis de ambiente
+## Executar o projeto
 
-Crie um arquivo `.env` na raiz do projeto:
+Instale as dependências, compile, aplique o banco e inicie a API:
 
-```env
-PORT=3000
-
-# Pode ser usada uma URL completa ou as variáveis PGHOST, PGPORT etc.
-DATABASE_URL=postgresql://usuario:senha@localhost:5432/encurtador
-
-REDIS_URL=redis://localhost:6379
-CACHE_TTL_SECONDS=3600
-PG_POOL_MAX=10
-```
-
-Para usar serviços em nuvem, substitua `DATABASE_URL` e `REDIS_URL` pelas URLs fornecidas pelos serviços. Não publique o `.env` no GitHub.
-
-## Instalação e execução
-
-Instale as dependências:
-
-```bash
+```powershell
 npm install
-```
-
-Compile o TypeScript:
-
-```bash
 npm run build
-```
-
-Crie/aplique a tabela usando Drizzle:
-
-```bash
 npm run db:migrate
-```
-
-Inicie a API compilada:
-
-```bash
 npm start
 ```
 
-A API ficará disponível, por padrão, em `http://localhost:3000`.
+Quando tudo estiver correto, aparecerá:
 
-## Uso da API
-
-### Criar um link curto
-
-Requisição:
-
-```bash
-curl -X POST http://localhost:3000/links ^
-  -H "Content-Type: application/json" ^
-  -d "{\"url\":\"https://www.example.com\"}"
+```text
+API de encurtador ouvindo na porta 3000
 ```
 
-No PowerShell, também é possível usar:
+Mantenha esse terminal aberto. Para abrir o frontend, em outro terminal execute um servidor estático:
 
 ```powershell
-Invoke-RestMethod -Method Post -Uri http://localhost:3000/links -ContentType "application/json" -Body '{"url":"https://www.example.com"}'
+npx serve frontend
 ```
 
-Resposta esperada:
+Abra o endereço mostrado pelo comando e use o formulário. Também é possível abrir `frontend/index.html` diretamente no navegador, mas um servidor local evita limitações do navegador relacionadas a arquivos locais.
 
-```json
-{
-  "code": "aZ91kLm",
-  "shortUrl": "http://localhost:3000/aZ91kLm"
-}
+### Execução em dois terminais
+
+No primeiro terminal, dentro da pasta do projeto:
+
+```powershell
+npm run build
+npm run db:migrate
+npm start
 ```
 
-### Redirecionar para a URL original
+No segundo terminal:
 
-```http
-GET /aZ91kLm
+```powershell
+npx serve frontend
 ```
 
-A resposta é HTTP `302` para a URL original.
+Depois, abra o endereço fornecido pelo `serve`. O frontend chama `http://localhost:3000/links`; a API usa o Neon e o Upstash configurados no `.env`.
 
-Se o código não existir, a API responde HTTP `404`.
+### Verificações que já funcionaram
 
-## Fluxo distribuído
-
-### Criação
-
-1. A instância stateless recebe a URL.
-2. Gera um código Base62.
-3. Tenta inseri-lo no PostgreSQL.
-4. Se ocorrer `23505`, outra requisição já usou aquele código; um novo código é gerado.
-5. Após a persistência, a URL é colocada no Redis com TTL.
-
-O banco é a autoridade para unicidade. Isso é mais seguro do que tentar garantir exclusividade apenas na memória de uma instância.
-
-### Redirecionamento
-
-1. A API procura `link:<codigo>` no Redis.
-2. Se encontrar, faz cache hit e redireciona sem consultar o banco.
-3. Se não encontrar, faz cache miss e consulta o PostgreSQL.
-4. Se encontrar no banco, armazena novamente no Redis com TTL.
-5. Redireciona com HTTP `302`.
-
-Esse padrão reduz a carga no banco quando os links são acessados repetidamente e permite que várias instâncias compartilhem o mesmo cache.
-
-## Limitações atuais
-
-- Ainda não há testes automatizados; o script `npm test` é apenas um placeholder.
-- O controller ainda usa SQL parametrizado com `pg`; o Drizzle está integrado para schema, migrations e acesso futuro tipado. A tabela já é criada pela migration do Drizzle.
-- O tratamento global de erros do Express ainda pode ser melhorado para retornar respostas padronizadas.
-- O endpoint não possui autenticação, autorização ou controle de abuso.
-- Não há rate limiting, observabilidade, métricas ou tracing.
-- O loop de colisão não possui limite máximo de tentativas. Na prática, colisões são improváveis com o código atual, mas um limite com resposta de erro seria mais defensivo.
-- O Redis é obrigatório para iniciar a aplicação nesta versão. Não existe fallback automático para rodar sem cache.
-- O projeto aceita qualquer URL sintaticamente válida; não verifica se o endereço realmente existe ou é seguro.
-- O `GET /:code` pode conflitar futuramente com novas rotas de primeiro nível, caso elas sejam adicionadas sem planejamento.
-- O diretório `dist/` é gerado pelo build e não deve ser editado manualmente.
-
-## O que falta para funcionar
-
-1. Instalar as dependências com `npm install`.
-2. Ter acesso a um PostgreSQL e executar `npm run db:migrate` para criar a tabela `links`.
-3. Ter acesso a um Redis.
-4. Criar o arquivo `.env` com as URLs corretas.
-5. Executar `npm run build`.
-6. Executar `npm start`.
-7. Testar o `POST /links` e acessar a `shortUrl` retornada.
-
-Sem PostgreSQL, o projeto compila, mas não consegue persistir ou buscar links. Sem Redis, a versão atual falha ao iniciar porque o servidor conecta ao cache antes de começar a escutar requisições.
-
-## Git e publicação
-
-O Git serve para versionar o código; ele não substitui PostgreSQL ou Redis. Antes de publicar no GitHub, confirme que arquivos com segredos não serão enviados:
-
-```gitignore
-node_modules/
-dist/
-.env
+```powershell
+npm run build
+npm run db:migrate
+npx drizzle-kit studio
 ```
 
-Depois, os comandos básicos são:
+- `npm run build`: compilou o TypeScript sem erros.
+- `npm run db:migrate`: aplicou a migration da tabela `links` no PostgreSQL.
+- `npx drizzle-kit studio`: abriu o Drizzle Studio para visualizar o banco.
+- Teste do Redis: `PING` retornou `PONG` após corrigir a URL para `rediss://`.
 
-```bash
+## Testar somente a API
+
+Em outro terminal, crie um link:
+
+```powershell
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://localhost:3000/links `
+  -ContentType "application/json" `
+  -Body '{"url":"https://www.google.com"}'
+```
+
+Para testar o redirecionamento, abra a `shortUrl` retornada ou use:
+
+```powershell
+curl.exe -I http://localhost:3000/SEU_CODIGO
+```
+
+O esperado é uma resposta HTTP `302` com o cabeçalho `Location`.
+
+## Scripts disponíveis
+
+| Script | Função |
+|---|---|
+| `npm run build` | Compila TypeScript para `dist/` |
+| `npm run db:generate` | Gera migration a partir do schema Drizzle |
+| `npm run db:migrate` | Aplica migrations no PostgreSQL |
+| `npm start` | Inicia a API compilada |
+| `npm test` | Ainda não implementado |
+
+## Limitações e próximos passos
+
+- Ainda não existem testes automatizados.
+- O Redis é obrigatório para iniciar a API nesta versão.
+- O frontend usa `http://localhost:3000/links`; em produção, altere `API_ENDPOINT` em `frontend/index.html` para a URL pública da API.
+- O controller ainda usa SQL parametrizado com `pg`; o Drizzle está integrado para schema, migrations e acesso futuro tipado.
+- Não há autenticação, rate limiting, métricas ou tracing.
+- O loop de colisão não possui limite máximo de tentativas.
+- A validação confirma o formato da URL, mas não verifica se o destino existe ou é seguro.
+- O diretório `dist/` é gerado automaticamente e não deve ser editado.
+
+## Git e segurança
+
+O Git versiona o código, mas não substitui PostgreSQL ou Redis. O `.gitignore` impede o envio de `.env`, `node_modules` e `dist`.
+
+```powershell
+git status
 git add .
-git commit -m "Implementa API de encurtamento em TypeScript"
+git commit -m "Conecta frontend à API de encurtamento"
 git push
 ```
 
-## Status da validação
-
-A compilação TypeScript foi validada com:
-
-```bash
-npm run build
-```
-
-O build gera os arquivos JavaScript correspondentes dentro de `dist/`. Ainda é necessário testar a execução contra instâncias reais ou hospedadas de PostgreSQL e Redis.
+Se uma senha do PostgreSQL ou Redis for compartilhada publicamente, revogue-a no provedor e gere uma nova.
