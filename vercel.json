@@ -13,11 +13,11 @@
   "routes": [
     {
       "src": "/api",
-      "dest": "/api/index.ts"
+      "dest": "/api/index.ts?__vercel_path=/"
     },
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.ts/$1"
+      "dest": "/api/index.ts?__vercel_path=/$1"
     },
     {
       "src": "/frontend",
