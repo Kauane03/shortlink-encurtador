@@ -135,6 +135,26 @@ PG_POOL_MAX=10
 
 Use `rediss://` quando o Redis exigir TLS, como no Upstash. Nunca publique o `.env`, pois ele contém credenciais.
 
+Se a porta configurada em `PORT` estiver ocupada, a API tenta automaticamente as portas seguintes. Os links curtos usam a porta escolhida quando `BASE_URL` não estiver definida.
+
+## Deploy na Vercel
+
+O projeto está configurado para publicar o frontend estático e a API Express como uma função Node.js Serverless. Importe o repositório na Vercel e adicione estas variáveis de ambiente em **Settings → Environment Variables**:
+
+- `DATABASE_URL`: URL do PostgreSQL de produção.
+- `REDIS_URL`: URL do Redis de produção (`rediss://` para serviços que exigem TLS).
+- `BASE_URL`: URL pública da API na Vercel, incluindo `/api`, por exemplo `https://seu-projeto.vercel.app/api`.
+- `CACHE_TTL_SECONDS`: `3600`.
+- `PG_POOL_MAX`: `10`.
+
+Não defina `PORT` na Vercel. A plataforma gerencia as portas, e a API não abre um servidor local em produção. Antes do primeiro uso, aplique as migrations uma vez ao banco de produção com `DATABASE_URL` configurada:
+
+```powershell
+npm run db:migrate
+```
+
+O script `npm run build` já compila o TypeScript. A configuração de deploy está em `vercel.json`: o frontend fica disponível em `/frontend` (e também na raiz), enquanto as requisições `/api/links` e `/api/<código>` são encaminhadas para a função do backend.
+
 ## Banco de dados com Drizzle
 
 O schema está em `db/schema.ts`. Para gerar uma migration após alterar esse schema:

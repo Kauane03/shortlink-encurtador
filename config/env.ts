@@ -7,7 +7,7 @@ import { z } from "zod";
  * em vez de aceitar tráfego e quebrar no meio de uma requisição.
  */
 const envSchema = z.object({
-	PORT: z.coerce.number().int().positive().default(3000),
+	PORT: z.coerce.number().int().positive().max(65535).default(3000),
 	DATABASE_URL: z.string().optional(),
 	REDIS_URL: z.string().default("redis://localhost:6379"),
 	CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
@@ -32,3 +32,11 @@ export const env = {
 	...parsed,
 	BASE_URL: (parsed.BASE_URL ?? `http://localhost:${parsed.PORT}`).replace(/\/+$/, ""),
 };
+
+export function setRuntimePort(port: number): void {
+	env.PORT = port;
+
+	if (!parsed.BASE_URL) {
+		env.BASE_URL = `http://localhost:${port}`;
+	}
+}

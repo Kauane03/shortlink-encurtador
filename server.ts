@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import { createClient } from "redis";
-import { env } from "./config/env";
+import { env, setRuntimePort } from "./config/env";
 import { createShortLink, redirectShortLink } from "./controllers/linkController";
 import { errorHandler } from "./middleware/errorHandler";
 import { validateBody } from "./middleware/validateBody";
@@ -27,6 +27,7 @@ redis.on("error", (error) => {
 });
 
 app.locals.redis = redis;
+let redisConnection: Promise<void> | undefined;
 
 /**
  * O helmet adiciona headers de segurança (HSTS, X-Content-Type-Options,
@@ -36,6 +37,23 @@ app.locals.redis = redis;
 app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: "10kb" }));
+app.use(async (_request, _response, next) => {
+	if (!redis.isReady) {
+		if (!redisConnection) {
+			redisConnection = redis
+				.connect()
+				.then(() => undefined)
+				.catch((error: unknown) => {
+					redisConnection = undefined;
+					console.error("Não foi possível conectar ao Redis; usando PostgreSQL:", error);
+				});
+		}
+
+		await redisConnection;
+	}
+
+	next();
+});
 
 /**
  * O POST cria o registro persistente; o GET usa cache distribuído e faz o
@@ -46,15 +64,50 @@ app.get("/:code", redirectShortLink);
 
 app.use(errorHandler);
 
-async function startServer(): Promise<void> {
-	await redis.connect();
+export default app;
 
-	app.listen(env.PORT, () => {
-		console.log(`API de encurtador ouvindo na porta ${env.PORT}`);
+function listenOnAvailablePort(port: number): Promise<number> {
+	return new Promise((resolve, reject) => {
+		const server = app.listen(port);
+
+		const onListening = (): void => {
+			server.removeListener("error", onError);
+			const address = server.address();
+
+			if (!address || typeof address === "string") {
+				reject(new Error("Não foi possível determinar a porta da API."));
+				return;
+			}
+
+			resolve(address.port);
+		};
+
+		const onError = (error: NodeJS.ErrnoException): void => {
+			server.removeListener("listening", onListening);
+
+			if (error.code === "EADDRINUSE" && port < 65535) {
+				console.warn(`A porta ${port} está ocupada; tentando a porta ${port + 1}.`);
+				void listenOnAvailablePort(port + 1).then(resolve, reject);
+				return;
+			}
+
+			reject(error);
+		};
+
+		server.once("listening", onListening);
+		server.once("error", onError);
 	});
 }
 
-startServer().catch((error: unknown) => {
-	console.error("Não foi possível iniciar a API:", error);
-	process.exitCode = 1;
-});
+async function startServer(): Promise<void> {
+	const port = await listenOnAvailablePort(env.PORT);
+	setRuntimePort(port);
+	console.log(`API de encurtador ouvindo na porta ${port}`);
+}
+
+if (process.env.NODE_ENV !== "production") {
+	startServer().catch((error: unknown) => {
+		console.error("Não foi possível iniciar a API:", error);
+		process.exitCode = 1;
+	});
+}
