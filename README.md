@@ -135,6 +135,14 @@ PG_POOL_MAX=10
 
 Use `rediss://` quando o Redis exigir TLS, como no Upstash. Nunca publique o `.env`, pois ele contém credenciais.
 
+## Deploy na Vercel
+
+O `vercel.json` configura o frontend estático em `/frontend` (também disponível na raiz) e a API Serverless em `/api`. Configure `DATABASE_URL` com o PostgreSQL de produção na Vercel e execute `npm run db:migrate` uma vez nesse banco.
+
+`REDIS_URL` é opcional: sem ela, a API usa diretamente o PostgreSQL. Para habilitar o cache em produção, configure `REDIS_URL` com a URL do Redis hospedado, como a URL `rediss://` do Upstash. Não use `localhost` na Vercel, pois isso aponta para a própria instância e não para um serviço Redis.
+
+`BASE_URL` é opcional na Vercel: quando não definida, os links curtos usam automaticamente `https://${VERCEL_URL}/api`. Configure-a manualmente somente se quiser usar um domínio próprio.
+
 ## Banco de dados com Drizzle
 
 O schema está em `db/schema.ts`. Para gerar uma migration após alterar esse schema:

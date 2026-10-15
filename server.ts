@@ -15,18 +15,21 @@ const app = express();
  * o comportamento consistente quando várias instâncias stateless da API são
  * executadas em paralelo ou substituídas durante um deploy.
  */
-const redis = createClient({
-	url: env.REDIS_URL,
-	// Com o Redis fora do ar, os comandos falham na hora em vez de esperar na
-	// fila de reconexão; o controller então segue direto para o PostgreSQL.
-	disableOfflineQueue: true,
-});
+const redis = env.REDIS_URL
+	? createClient({
+			url: env.REDIS_URL,
+			// Com o Redis fora do ar, os comandos falham na hora em vez de esperar na
+			// fila de reconexão; o controller então segue direto para o PostgreSQL.
+			disableOfflineQueue: true,
+		})
+	: undefined;
 
-redis.on("error", (error) => {
+redis?.on("error", (error) => {
 	console.error("Erro no Redis:", error);
 });
 
 app.locals.redis = redis;
+let redisConnection: Promise<void> | undefined;
 
 /**
  * O helmet adiciona headers de segurança (HSTS, X-Content-Type-Options,
@@ -36,6 +39,27 @@ app.locals.redis = redis;
 app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: "10kb" }));
+app.use(async (request, _response, next) => {
+	const redisClient = request.app.locals.redis as typeof redis;
+
+	if (!redisClient || redisClient.isReady) {
+		next();
+		return;
+	}
+
+	if (!redisConnection) {
+		redisConnection = redisClient.connect().then(
+			() => undefined,
+			(error: unknown) => {
+				console.error("Redis indisponível; continuando com PostgreSQL:", error);
+				request.app.locals.redis = undefined;
+			},
+		);
+	}
+
+	await redisConnection;
+	next();
+});
 
 /**
  * O POST cria o registro persistente; o GET usa cache distribuído e faz o
@@ -46,15 +70,21 @@ app.get("/:code", redirectShortLink);
 
 app.use(errorHandler);
 
+export default app;
+
 async function startServer(): Promise<void> {
-	await redis.connect();
+	if (redis) {
+		await redis.connect();
+	}
 
 	app.listen(env.PORT, () => {
 		console.log(`API de encurtador ouvindo na porta ${env.PORT}`);
 	});
 }
 
-startServer().catch((error: unknown) => {
-	console.error("Não foi possível iniciar a API:", error);
-	process.exitCode = 1;
-});
+if (process.env.NODE_ENV !== "production") {
+	startServer().catch((error: unknown) => {
+		console.error("Não foi possível iniciar a API:", error);
+		process.exitCode = 1;
+	});
+}

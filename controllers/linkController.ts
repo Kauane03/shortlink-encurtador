@@ -7,7 +7,7 @@ import { shortCodeSchema, type CreateLinkInput } from "../validation/linkSchemas
 
 const MAX_INSERT_ATTEMPTS = 5;
 
-type RedisClient = RedisClientType;
+type RedisClient = RedisClientType | undefined;
 
 /**
  * O Redis é só uma otimização: se ele estiver fora do ar, a API continua
@@ -15,6 +15,10 @@ type RedisClient = RedisClientType;
  * ignoradas, nunca propagadas para o cliente.
  */
 async function cacheGet(redis: RedisClient, key: string): Promise<string | null> {
+	if (!redis) {
+		return null;
+	}
+
 	try {
 		return await redis.get(key);
 	} catch (error: unknown) {
@@ -24,6 +28,10 @@ async function cacheGet(redis: RedisClient, key: string): Promise<string | null>
 }
 
 async function cacheSet(redis: RedisClient, key: string, value: string): Promise<void> {
+	if (!redis) {
+		return;
+	}
+
 	try {
 		await redis.set(key, value, { EX: env.CACHE_TTL_SECONDS });
 	} catch (error: unknown) {

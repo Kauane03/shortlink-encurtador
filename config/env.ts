@@ -9,10 +9,11 @@ import { z } from "zod";
 const envSchema = z.object({
 	PORT: z.coerce.number().int().positive().default(3000),
 	DATABASE_URL: z.string().optional(),
-	REDIS_URL: z.string().default("redis://localhost:6379"),
+	REDIS_URL: z.string().optional(),
 	CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
 	PG_POOL_MAX: z.coerce.number().int().positive().default(10),
 	BASE_URL: z.url({ protocol: /^https?$/ }).optional(),
+	VERCEL_URL: z.string().optional(),
 });
 
 const result = envSchema.safeParse(process.env);
@@ -30,5 +31,8 @@ const parsed = result.data;
  */
 export const env = {
 	...parsed,
-	BASE_URL: (parsed.BASE_URL ?? `http://localhost:${parsed.PORT}`).replace(/\/+$/, ""),
+	BASE_URL: (
+		parsed.BASE_URL ??
+		(parsed.VERCEL_URL ? `https://${parsed.VERCEL_URL}/api` : `http://localhost:${parsed.PORT}`)
+	).replace(/\/+$/, ""),
 };
